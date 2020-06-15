@@ -5,7 +5,7 @@ import 'package:angel_firestore/angel_firestore.dart';
 import 'package:angel_framework/angel_framework.dart';
 import 'package:dartbase_admin/dartbase.dart';
 
-const List<String> _sensitiveFieldNames = const [
+final List<String> _sensitiveFieldNames = const [
   'id',
 ];
 
@@ -16,8 +16,8 @@ Map<String, dynamic> _removeSensitive(Map<String, dynamic> data) {
 }
 
 /// Apply a where filter
-QueryReference _whereFilter(CollectionReference collection,
-    FirestoreWhereFilter whereFilter) {
+QueryReference _whereFilter(
+    CollectionReference collection, FirestoreWhereFilter whereFilter) {
   switch (whereFilter.comparisonType) {
     case ComparisonType.isEqualTo:
       return collection.where(whereFilter.field, isEqualTo: whereFilter.value);
@@ -46,26 +46,26 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
   /// `false` by default.
   final bool allowRemoveAll;
 
-  FirestoreClientService(CollectionReference this.collection,
-      {this.allowRemoveAll = false})
+  FirestoreClientService(this.collection, {this.allowRemoveAll = false})
       : super();
 
   /// GET /
   /// Fetch all resources. Usually returns a List.
   @override
-  Future<List<Map<String, dynamic>>> index([Map<String, dynamic> params]) async {
+  Future<List<Map<String, dynamic>>> index(
+      [Map<String, dynamic> params]) async {
     List<Document> documents;
-    if (params == null
-        || (params.containsKey('query') && (params['query'] as Map).isEmpty)
-        || (!params.containsKey(r'$where') && !params.containsKey('query'))) {
+    if (params == null ||
+        (params.containsKey('query') && (params['query'] as Map).isEmpty) ||
+        (!params.containsKey(r'$where') && !params.containsKey('query'))) {
       documents = await collection.get();
-    }
-    else {
+    } else {
       FirestoreWhereFilter whereFilter;
       if (params.containsKey('query')) {
         Map<String, dynamic> queryMap = params['query'];
-        whereFilter = FirestoreWhereFilter(queryMap.keys.first,
-            queryMap.values.first, comparisonType: ComparisonType.isEqualTo);
+        whereFilter = FirestoreWhereFilter(
+            queryMap.keys.first, queryMap.values.first,
+            comparisonType: ComparisonType.isEqualTo);
       }
       if (params.containsKey(r'$where')) {
         whereFilter = params[r'$where'];
@@ -84,7 +84,7 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
     var found = await collection.document(id);
 
     if (found == null) {
-      throw new AngelHttpException.notFound(
+      throw AngelHttpException.notFound(
           message: 'No record found for ID $id');
     }
 
@@ -149,7 +149,7 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
         page.forEach((doc) async {
           await doc.reference.delete();
         });
-        while (!page.isEmpty) {
+        while (page.isNotEmpty) {
           page = await collection.get(nextPageToken: page.nextPageToken);
           page.forEach((doc) async {
             await doc.reference.delete();
@@ -166,7 +166,7 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
       await docRef.delete();
       return _mapWithId(doc);
     } catch (e, st) {
-      throw new AngelHttpException(e, stackTrace: st);
+      throw AngelHttpException(e, stackTrace: st);
     }
   }
 
@@ -178,20 +178,20 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
   @override
   Future<Map<String, dynamic>> findOne(
       [Map<String, dynamic> params,
-        String errorMessage =
-        'No record was found matching the given query.']) async {
+      String errorMessage =
+          'No record was found matching the given query.']) async {
     List<Document> documents;
-    if (params == null
-        || (params.containsKey('query') && (params['query'] as Map).isEmpty)
-        || (!params.containsKey(r'$where') && !params.containsKey('query'))) {
+    if (params == null ||
+        (params.containsKey('query') && (params['query'] as Map).isEmpty) ||
+        (!params.containsKey(r'$where') && !params.containsKey('query'))) {
       documents = await collection.limit(1).get();
-    }
-    else {
+    } else {
       FirestoreWhereFilter whereFilter;
       if (params.containsKey('query')) {
         Map<String, dynamic> queryMap = params['query'];
-        whereFilter = FirestoreWhereFilter(queryMap.keys.first,
-            queryMap.values.first, comparisonType: ComparisonType.isEqualTo);
+        whereFilter = FirestoreWhereFilter(
+            queryMap.keys.first, queryMap.values.first,
+            comparisonType: ComparisonType.isEqualTo);
       }
       if (params.containsKey(r'$where')) {
         whereFilter = params[r'$where'];
@@ -216,4 +216,3 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
     return results;
   }
 }
-
