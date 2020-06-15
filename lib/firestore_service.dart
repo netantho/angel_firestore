@@ -84,8 +84,7 @@ class FirestoreClientService extends Service<String, Map<String, dynamic>> {
     var found = await collection.document(id);
 
     if (found == null) {
-      throw AngelHttpException.notFound(
-          message: 'No record found for ID $id');
+      throw AngelHttpException.notFound(message: 'No record found for ID $id');
     }
 
     var doc = await found.get();
