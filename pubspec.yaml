@@ -2,7 +2,7 @@ name: angel_firestore
 description: >-
   Admin Firebase firestore service for the angel framework.
   With this package you can use firestore as a DB in your angel project.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/netantho/angel_firestore
 environment:
   sdk: '>=2.0.0 <3.0.0'
