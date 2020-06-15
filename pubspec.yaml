@@ -3,7 +3,7 @@ description: Admin Firebase firestore service for the angel framework
 version: 0.1.0
 authors:
   - Anthony Verez
-
+homepage: https://github.com/netantho/angel_firestore
 environment:
   sdk: '>=2.0.0 <3.0.0'
 
