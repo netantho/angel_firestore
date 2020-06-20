@@ -1,13 +1,12 @@
 import 'package:angel_container/angel_container.dart';
+import 'package:angel_firestore/angel_firestore.dart';
 import 'package:angel_framework/angel_framework.dart';
 import 'package:angel_framework/http.dart';
-import 'package:angel_firestore/angel_firestore.dart';
+import 'package:dartbase_admin/dartbase_admin.dart';
 import 'package:dotenv/dotenv.dart' show load, env;
 import 'package:http/http.dart' as http;
 import 'package:json_god/json_god.dart' as god;
-import 'package:dartbase_admin/dartbase.dart';
 import 'package:test/test.dart';
-
 
 final headers = {
   'accept': 'application/json',
@@ -16,14 +15,14 @@ final headers = {
 
 final Map testGreeting = {'to': 'world'};
 
-wireHooked(HookedService hooked) {
+dynamic wireHooked(HookedService hooked) {
   hooked.afterAll((HookedServiceEvent event) {
-    print("Just ${event.eventName}: ${event.result}");
+    print('Just ${event.eventName}: ${event.result}');
     print('Params: ${event.params}');
   });
 }
 
-main() {
+void main() {
   group('Generic Tests', () {
     Angel app;
     AngelHttp transport;
@@ -32,13 +31,14 @@ main() {
     Firebase firebase;
     CollectionReference collection;
     String url;
-    HookedService<String, Map<String, dynamic>, FirestoreClientService> greetingService;
-    HookedService<String, Map<String, dynamic>, FirestoreClientService> removeAllService;
+    HookedService<String, Map<String, dynamic>, FirestoreClientService>
+        greetingService;
+    HookedService<String, Map<String, dynamic>, FirestoreClientService>
+        removeAllService;
 
     setUpAll(() async {
       load();
-      firebase = await Firebase.initialize(
-          env['FIREBASE_PROJECT_ID'],
+      firebase = await Firebase.initialize(env['FIREBASE_PROJECT_ID'],
           await ServiceAccount.fromFile(env['FIREBASE_SERVICE_ACCOUNT_PATH']));
     });
 
@@ -50,8 +50,8 @@ main() {
       firestore = Firestore(firebase: firebase);
       collection = firestore.collection('test');
 
-      var serviceAllowRemoveAll = FirestoreClientService(collection,
-          allowRemoveAll: true);
+      var serviceAllowRemoveAll =
+          FirestoreClientService(collection, allowRemoveAll: true);
       removeAllService = HookedService(serviceAllowRemoveAll);
       wireHooked(removeAllService);
       var service = FirestoreClientService(collection);
@@ -59,7 +59,7 @@ main() {
       wireHooked(greetingService);
 
       // Delete all elements in the collection to start with
-      removeAllService.remove(null);
+      await removeAllService.remove(null);
 
       app.use('/api', greetingService);
 
@@ -92,11 +92,11 @@ main() {
     });
 
     test('insert items', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
 
-      response = await client.get("$url/api");
+      response = await client.get('$url/api');
       expect(response.statusCode, isIn([200, 201]));
       var users = god.deserialize(response.body,
           outputType: <Map>[].runtimeType) as List<Map>;
@@ -104,7 +104,7 @@ main() {
     });
 
     test('read item', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
       var created = god.deserialize(response.body) as Map;
@@ -117,19 +117,20 @@ main() {
     });
 
     test('findOne', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
       var created = god.deserialize(response.body) as Map;
 
-      var read = await greetingService.findOne(
-          {'query': {'to': 'world'}});
+      var read = await greetingService.findOne({
+        'query': {'to': 'world'}
+      });
       expect(read['id'], equals(created['id']));
       expect(read['to'], equals('world'));
     });
 
     test('readMany', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
       var created = god.deserialize(response.body) as Map;
@@ -139,13 +140,13 @@ main() {
     });
 
     test('modify item', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
       var created = god.deserialize(response.body) as Map;
 
       response = await client.patch("$url/api/${created['id']}",
-          body: god.serialize({"to": "Mom"}), headers: headers);
+          body: god.serialize({'to': 'Mom'}), headers: headers);
       var modified = god.deserialize(response.body) as Map;
       expect(response.statusCode, isIn([200, 201]));
       expect(modified['id'], equals(created['id']));
@@ -153,13 +154,13 @@ main() {
     });
 
     test('update item', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       expect(response.statusCode, isIn([200, 201]));
       var created = god.deserialize(response.body) as Map;
 
       response = await client.post("$url/api/${created['id']}",
-          body: god.serialize({"to": "Updated"}), headers: headers);
+          body: god.serialize({'to': 'Updated'}), headers: headers);
       var modified = god.deserialize(response.body) as Map;
       expect(response.statusCode, isIn([200, 201]));
       expect(modified['id'], equals(created['id']));
@@ -167,11 +168,11 @@ main() {
     });
 
     test('remove item', () async {
-      var response = await client.post("$url/api",
+      var response = await client.post('$url/api',
           body: god.serialize(testGreeting), headers: headers);
       var created = god.deserialize(response.body) as Map;
 
-      int lastCount = (await greetingService.index()).length;
+      var lastCount = (await greetingService.index()).length;
 
       await client.delete("$url/api/${created['id']}");
       expect((await greetingService.index()).length, equals(lastCount - 1));
@@ -184,18 +185,18 @@ main() {
 
     test('\$sort and query parameters', () async {
       // Search by where.eq
-      Map world = await greetingService.create({"to": "world"});
-      await greetingService.create({"to": "Mom"});
-      await greetingService.create({"to": "Updated"});
+      Map world = await greetingService.create({'to': 'world'});
+      await greetingService.create({'to': 'Mom'});
+      await greetingService.create({'to': 'Updated'});
 
-      var response = await client.get("$url/api?to=world");
+      var response = await client.get('$url/api?to=world');
       var queried = god.deserialize(response.body,
           outputType: <Map>[].runtimeType) as List<Map>;
       print(queried);
       expect(queried.length, equals(1));
       expect(queried[0].keys.length, equals(2));
-      expect(queried[0]["id"], equals(world["id"]));
-      expect(queried[0]["to"], equals(world["to"]));
+      expect(queried[0]['id'], equals(world['id']));
+      expect(queried[0]['to'], equals(world['to']));
     });
   });
 }
